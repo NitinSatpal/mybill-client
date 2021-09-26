@@ -1,0 +1,39 @@
+@import "src/app/@shared/styles/styles";
+
+.sidenav {
+    height: 100%;
+    width: 200px;
+    position: fixed;
+    z-index: 1;
+    top: 55px;
+    left: 0;
+    background-color: rgba(52, 58, 64, 1) !important;
+    overflow-x: hidden;
+    padding-top: 20px;
+}
+
+.sidenav a {
+    padding: 6px 6px 6px 32px;
+    text-decoration: none;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.55);
+    display: block;
+    cursor: pointer;
+
+    &.active {
+        color: #fff;
+
+        &:hover {
+            color: #fff;
+        }
+    }
+}
+
+.sidenav a:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.main {
+    margin-left: 200px; /* Same as the width of the sidenav */
+}
+

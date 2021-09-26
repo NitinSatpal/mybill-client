@@ -1,0 +1,75 @@
+<div class="login-register-container bg-light">
+  <div class="login-register-box">
+    <h1 translate>APP_NAME</h1>
+    <div class="container">
+      <div class="card col-md-6 mt-3 mx-auto">
+        <div class="card-body">
+          <h4 class="card-title text-center">
+            <i class="far fa-3x fa-user-circle text-muted"></i>
+          </h4>
+          <form (ngSubmit)="login()" [formGroup]="loginForm" novalidate>
+            <div class="alert alert-danger" *ngIf="errors && errors?.global">
+              {{ errors?.global[0] }}
+            </div>
+            <div class="form-group">
+              <label class="d-block">
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="username"
+                  autocomplete="username"
+                  [placeholder]="'10 digit Mobile Number' | translate"
+                />
+                <span hidden translate>Email</span>
+                <small
+                  [hidden]="loginForm.controls.username.valid || loginForm.controls.username.untouched"
+                  class="text-danger"
+                  translate
+                >
+                  Phone Number is required
+                </small>
+              </label>
+
+              <label class="d-block">
+                <input
+                  type="password"
+                  class="form-control"
+                  formControlName="password"
+                  autocomplete="current-password"
+                  [placeholder]="'Password' | translate"
+                  required
+                />
+                <span hidden translate>Password</span>
+                <small
+                  [hidden]="loginForm.controls.password.valid || loginForm.controls.password.untouched"
+                  class="text-danger"
+                  translate
+                >
+                  Password is required
+                </small>
+              </label>
+              <div>
+                <label class="checkbox">
+                  <input type="checkbox" formControlName="remember">
+                  <span translate>Remember me</span>
+                </label>
+              </div>
+            </div>
+            <button class="btn btn-primary w-100" type="submit" [disabled]="loginForm.invalid || isLoading">
+              <i class="fas fa-cog fa-spin" [hidden]="!isLoading"></i>
+              <span translate>Login</span>
+            </button>
+
+            <div class="text-center m-t-5">
+              <span translate>Not having an account?</span>
+              <a class="cursor-pointer bold primary-colored-text" routerLink="/register"
+              translate
+                >Register here!
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+<div class="row flex">
+  <div class="col" [class]="columnWidthClass" *ngFor="let dropdown of dropDowns; let i = index;">
+    <ng-select
+      [items]="dropdown.options"
+      bindLabel="{{dropdown.bindLabel}}"
+      bindValue="{{dropdown.bindValue}}"
+      [placeholder]="dropdown.placeholder"
+      [(ngModel)]="dropdown[dropdown.model]"
+      (ngModelChange)="emitSort()">
+      <ng-template ng-option-tmp let-item="item" let-index="index">
+        {{ item[dropdown.bindLabel] }}
+      </ng-template>
+    </ng-select>
+  </div>
+</div>

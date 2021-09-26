@@ -1,0 +1,311 @@
+<div class="container">
+  <div class="sidenav">
+    <a (click)="selectSettingTab(settingTab.ACCOUNT)" [class.active]="selectedTab === settingTab.ACCOUNT">Account</a>
+    <a (click)="selectSettingTab(settingTab.BUSINESS_PROFILES)"
+       [class.active]="selectedTab === settingTab.BUSINESS_PROFILES"
+       *ngIf="profile.profile_type === 1">Profile (Business)</a>
+    <a (click)="selectSettingTab(settingTab.PERSONAL_PROFILES)"
+       [class.active]="selectedTab === settingTab.PERSONAL_PROFILES"
+       *ngIf="profile.profile_type === 2">Profile (Personal)</a>
+  </div>
+  
+  <div class="main m-t-25">
+    <ng-container *ngIf="selectedTab === settingTab.ACCOUNT">
+      Account Settings Coming soon!
+    </ng-container>
+
+    <ng-container *ngIf="selectedTab === settingTab.BUSINESS_PROFILES">
+      <div class="row row-flex">
+        <div class="col-cs-35">
+          <ng-select
+            [items]="businessProfileOptions"
+            bindLabel="name"
+            bindValue="id"
+            placeholder="Choose Action ..."
+            [(ngModel)]="selectedAction"
+            (ngModelChange)="onActionSelect()"
+            [clearable]="false"
+          >
+          </ng-select>
+        </div>
+      </div>
+
+      <ng-container  *ngIf="selectedAction === settingAction.UPDATE_ADDRESS">
+        <div class="alert alert-success m-t-20" *ngIf="success">
+          <span translate>Address updated successfully!</span>
+        </div>
+        <div class="row row-flex m-t-20">
+          <div class="col col-xs-12">
+            <div class="form-label" translate>Address Line 1</div>
+            <input type="text"
+              [(ngModel)]="profile.address.address_line_1"
+              placeholder="Address Line 1"
+              class="width-p-100" />
+          </div>
+        </div>
+
+        <div class="row row-flex m-t-20">
+          <div class="col col-xs-12">
+            <div class="form-label" translate>Address Line 2</div>
+            <input type="text"
+              [(ngModel)]="profile.address.address_line_2"
+              placeholder="Address Line 2"
+              class="width-p-100" />
+          </div>
+        </div>
+
+        <div class="row row-flex m-t-20">
+          <div class="col col-xs-6">
+            <div class="form-label" translate>Postal Code</div>
+            <input type="text"
+              [(ngModel)]="profile.address.postal_code"
+              placeholder="Postal Code"
+              class="width-p-100" />
+          </div>
+
+          <div class="col col-xs-6">
+            <div class="form-label" translate>City</div>
+            <input type="text"
+              [(ngModel)]="profile.address.city"
+              placeholder="City"
+              class="width-p-100" />
+          </div>
+        </div>
+
+        <div class="row row-flex m-t-20 text-right">
+          <button type="button" class="btn btn-primary width-p-25 mr-left-auto" (click)="saveProfileAddress()">Save</button>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedAction === settingAction.ADD_COMMON_COMMISSION">
+        <div class="row m-t-20">
+          <div class="col-cs-100">
+            <label class="checkbox">
+              <input type="checkbox" [(ngModel)]="profileSettings.set_commission_per_invoice" (ngModelChange)="onPerInvoiceCommissionFlagChange()">
+              <span translate>I will set commission values for each invoice separately.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="row m-t-20" *ngIf="errors && errors?.global">
+          <div class="alert alert-danger m-b-0">
+            {{ errors?.global[0] }}
+          </div>
+        </div>
+        <div class="row m-t-20" *ngIf="success">
+          <div class="alert alert-success m-b-0">
+            <span translate>Commission updated successfully!</span>
+          </div>
+        </div>
+
+        <ng-container *ngIf="!profileSettings.set_commission_per_invoice">
+          <div class="row m-t-20">
+            <div class="col col-cs-35 m-t-5">
+              <div class="form-label" translate>Charge Commission To</div>
+              <ng-select
+                [items]="commissionApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="Choose whom you want to charge"
+                [clearable]="false"
+                [(ngModel)]="profileSettings.charge_applicable_to"
+                (ngModelChange)="onChargeCommissionToChange()"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20">
+            <div class="col col-cs-100" *ngIf="showSeparateCommissionSection">
+              <span translate>Seller Commission</span>
+              <hr />
+            </div>
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission</div>
+              <input
+                type="number"
+                [(ngModel)]="profileSettings.seller_commission_value"
+                placeholder="Commission"
+                [disabled]="!profileSettings.charge_applicable_to"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.seller_commission_value">
+                {{ errors?.seller_commission_value[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="e.g. Per Kilogram"
+                [disabled]="!profileSettings.charge_applicable_to"
+                [(ngModel)]="profileSettings.seller_commission_applied_to"
+              >
+              </ng-select>
+            </div>
+
+            <div class="col col-cs-30">
+              <div class="form-label" translate>Commission type</div>
+              <ng-select
+                [items]="commissionAndDiscountType"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="Commission Type"
+                [disabled]="!profileSettings.charge_applicable_to"
+                [(ngModel)]="profileSettings.seller_commission_type"
+                [clearable]="false"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20" *ngIf="profileSettings.seller_commission_type == 2">
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission</div>
+              <input
+                type="number"
+                placeholder="Price For Commission"
+                [(ngModel)]="profileSettings.seller_price_for_commission"
+                [disabled]="!profileSettings.charge_applicable_to"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.seller_price_for_commission">
+                {{ errors?.seller_price_for_commission[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                [disabled]="!profileSettings.charge_applicable_to"
+                placeholder="e.g. Per Kilogram"
+                [(ngModel)]="profileSettings.seller_price_for_commission_applied_to"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20" *ngIf="showSeparateCommissionSection">
+            <div class="col col-cs-100">
+              <span translate>Buyer Commission</span>
+              <hr />
+            </div>
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission</div>
+              <input
+                type="number"
+                [(ngModel)]="profileSettings.buyer_commission_value"
+                [disabled]="!profileSettings.charge_applicable_to"
+                placeholder="Commission"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.buyer_commission_value">
+                {{ errors?.buyer_commission_value[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                [disabled]="!profileSettings.charge_applicable_to"
+                placeholder="e.g. Per Kilogram"
+                [(ngModel)]="profileSettings.buyer_commission_applied_to"
+              >
+              </ng-select>
+              <small class="text-danger" *ngIf="errors && errors?.buyer_commission_applied_to">
+                {{ errors?.buyer_commission_applied_to[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-30">
+              <div class="form-label" translate>Commission type</div>
+              <ng-select
+                [items]="commissionAndDiscountType"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                [disabled]="!profileSettings.charge_applicable_to"
+                placeholder="Commission Type"
+                [(ngModel)]="profileSettings.buyer_commission_type"
+                [clearable]="false"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20" *ngIf="profileSettings.buyer_commission_type == 2">
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission</div>
+              <input
+                type="number"
+                placeholder="Price For Commission"
+                [disabled]="!profileSettings.charge_applicable_to"
+                [(ngModel)]="profileSettings.buyer_price_for_commission"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.buyer_price_for_commission">
+                {{ errors?.buyer_price_for_commission[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                [disabled]="!profileSettings.charge_applicable_to"
+                placeholder="e.g. Per Kilogram"
+                [(ngModel)]="profileSettings.buyer_price_for_commission_applied_to"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-10" *ngIf="profileSettings.charge_applicable_to === invoiceEnum.BOTH_SELLER_AND_BUYER">
+            <div class="col col-cs-100 m-t-5">
+              <span>
+                <span *ngIf="!showSeparateCommissionSection" translate>
+                  Want to add separate commissions for seller and buyer?
+                  <span
+                    class="primary-colored-text bold cursor-pointer"
+                    (click)="toggleSeparateCommissionSection(!showSeparateCommissionSection)"
+                    translate
+                  >
+                    Click Here!
+                  </span>
+                </span>
+                <span *ngIf="showSeparateCommissionSection" translate>
+                  <span
+                    class="primary-colored-text bold cursor-pointer"
+                    (click)="toggleSeparateCommissionSection(!showSeparateCommissionSection)"
+                    translate
+                  >
+                    Go back
+                  </span>
+                  and add the same commission for seller and buyer.
+                </span>
+              </span>
+            </div>
+          </div>
+        </ng-container>
+        <div class="row row-flex m-t-20 text-right">
+          <button type="button" class="btn btn-primary width-p-25 mr-left-auto" (click)="saveProfileCommission()">Save</button>
+        </div>
+      </ng-container>
+    </ng-container>
+    
+    <ng-container *ngIf="selectedTab === settingTab.PERSONAL_PROFILES">
+      Personal Profile Settings Coming soon!
+    </ng-container>
+    
+  </div>
+</div>

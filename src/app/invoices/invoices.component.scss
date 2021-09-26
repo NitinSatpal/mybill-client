@@ -1,0 +1,23 @@
+@import "src/app/@shared/styles/styles";
+
+.final-price-heading {
+  font-size: 16px !important;
+}
+
+.select-invoice {
+  input {
+    background-color: white;
+    position: relative;
+  }
+}
+
+.status-change-selector {
+  margin-top: -10px;
+}
+
+:host ::ng-deep {
+  .summary-checkbox {
+    margin-right: 23px !important;
+  }
+}
+

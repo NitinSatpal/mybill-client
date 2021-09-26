@@ -1,0 +1,295 @@
+<div class="container" [class.home]="profiles || profiles?.length">
+  <ng-container *ngIf="!isLoading && (!profiles || !profiles?.length)">
+    <p class="font-size-18 welcome-box-text bold">
+      Welcome! It seems you have not created any profile yet! Let us help you in setting up your Profile.
+      <br />
+      Currently we support two types of Profiles:
+    </p>
+    <div class="profile-items">
+      <ul class="fa-ul">
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Business
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Personal
+        </li>
+      </ul>
+    </div>
+
+    <p class="business-profile-item-info font-size-16 m-t-30">
+      You should create Business Profile if you want to use this platform to keep track of your business bills,
+      invoices, payments etc. Our platform is ideal for the broker business model as of now i.e.
+      <b>The entity who breaks the deal by staying in the middle of the buyer and the seller</b>.
+      <br />
+      <span class="font-size-18 bold m-t-10 block"> Our Business profile includes: </span>
+    </p>
+    <div class="business-items">
+      <ul class="fa-ul">
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Adding and Managing Sellers.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Adding and Managing Buyers.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Adding and Managing Invoices.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Summary of your money per seller.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Summary of your money per buyer.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Overall Summary by day, week, month or a date
+          range.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Generating bills.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>and so much more....
+        </li>
+        <li>
+          <span class="fa-li">
+            <i class="fas fa-check-square"></i>
+          </span>
+          <a
+            (click)="newProfile.profile_type = profileType.BUSINESS"
+            data-toggle="modal"
+            data-target="#profileCreateModal"
+            class="cursor-pointer font-size-18 bold profile-create-link"
+          >
+            Click here
+          </a>
+          to create business profile.
+        </li>
+      </ul>
+    </div>
+
+    <p class="persona-profile-item-info font-size-16 m-t-30">
+      You should create Personal Profile if you want to use this platform for personal finance management. With our
+      platform, you can manage you finances easily and efficiently.
+      <br />
+      <span class="font-size-18 bold m-t-10 block"> With our Personal profile you can: </span>
+    </p>
+    <div class="business-items">
+      <ul class="fa-ul">
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Split your bills.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Track your daily expenditure.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Set financial goals.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Get summary of your money by day, week, month,
+          year or a specific date range.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>Keep track of lent or borrowed money.
+        </li>
+        <li>
+          <span class="fa-li"> <i class="fas fa-check-square"></i> </span>and so much more....
+        </li>
+        <li>
+          <span class="fa-li">
+            <i class="fas fa-check-square"></i>
+          </span>
+          <a
+            (click)="newProfile.profile_type = profileType.PERSONAL"
+            data-toggle="modal"
+            data-target="#profileCreateModal"
+            class="cursor-pointer font-size-18 bold profile-create-link"
+          >
+            Click here
+          </a>
+          to create personal profile.
+        </li>
+      </ul>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!isLoading && profiles?.length">
+    <div class="row flex">
+      <div class="col col-cs-20" *ngIf="profiles?.length > 1">
+        <ng-select
+        [items]="profiles"
+        bindLabel="name"
+        bindValue="id"
+        placeholder="Select Profile"
+        [(ngModel)]="selectedProfileId"
+        (ngModelChange)="loadSelectedProfile()"
+        [clearable]="false"
+      >
+      </ng-select>
+      </div>
+      <div class="col col-cs-20 mr-left-auto">
+        <button type="button" class="btn btn-primary width-p-100" data-toggle="modal" data-target="#profileCreateModal">
+          <span translate>Create Profile</span>
+        </button>
+      </div>
+    </div>
+    <div class="row flex justify-center align-center m-t-50">
+      <div class="summary-box" routerLink="/sellers" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-shipping-fast outline"></i>
+          <div class="text-center bold label" translate>Sellers</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          {{ profileSummary.total_sellers }}
+        </div>
+      </div>
+      <div class="summary-box" routerLink="/buyers" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-cart-arrow-down outline"></i>
+          <div class="text-center bold label" translate>Buyers</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          {{ profileSummary.total_buyers }}
+        </div>
+      </div>
+
+      <div class="summary-box" routerLink="/sellers" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-money-bill outline"></i>
+          <div class="text-center bold label" translate>Sellers Commission</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          <span [class.font-size-50]="profileSummary.invoices_data?.total_seller_commission <= 9999"
+            [class.font-size-40]="profileSummary.invoices_data?.total_seller_commission > 9999 &&
+            profileSummary.invoices_data?.total_seller_commission < 999999"
+            [class.font-size-30]="profileSummary.invoices_data?.total_seller_commission > 999999 &&
+            profileSummary.invoices_data?.total_seller_commission < 99999999"
+            [class.font-size-20]="profileSummary.invoices_data?.total_seller_commission > 99999999">
+            {{ profileSummary.invoices_data?.total_seller_commission | number:'1.2-2':'en-IN' }}
+          </span>
+          
+        </div>
+      </div>
+      <div class="summary-box" routerLink="/buyers" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-money-bill outline"></i>
+          <div class="text-center bold label" translate>Buyers Commission</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          <span [class.font-size-50]="profileSummary.invoices_data?.total_buyer_commission <= 9999"
+            [class.font-size-40]="profileSummary.invoices_data?.total_buyer_commission > 9999 &&
+            profileSummary.invoices_data?.total_buyer_commission < 999999"
+            [class.font-size-30]="profileSummary.invoices_data?.total_buyer_commission > 999999 &&
+            profileSummary.invoices_data?.total_buyer_commission < 99999999"
+            [class.font-size-20]="profileSummary.invoices_data?.total_buyer_commission > 99999999">
+            {{ profileSummary.invoices_data?.total_buyer_commission | number:'1.2-2':'en-IN' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row flex justify-center align-center m-t-50">
+      <div class="summary-box" routerLink="/invoices" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-receipt outline"></i>
+          <div class="text-center bold label" translate>Invoices</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          {{ profileSummary.invoices_data?.total_invoices }}
+        </div>
+      </div>
+
+      <div class="summary-box" routerLink="/invoices" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-grin outline"></i>
+          <div class="text-center bold label" translate>Paid <br/> Invoices</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          {{ profileSummary.invoices_data?.total_paid_invoices }}
+        </div>
+      </div>
+
+      <div class="summary-box" routerLink="/invoices" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-angry outline"></i>
+          <div class="text-center bold label" translate>Unpaid<br/> Invoices</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          {{ profileSummary.invoices_data?.total_unpaid_invoices }}
+        </div>
+      </div>
+
+      <div class="summary-box" routerLink="/invoices" routerLinkActive="active">
+        <div class="flex align-center justify-space-evenly">
+          <i class="fas fa-frown-open outline"></i>
+          <div class="text-center bold label" translate>Partial Paid<br/> Invoices</div>
+        </div>
+        <div class="flex align-center justify-center value bold">
+          {{ profileSummary.invoices_data?.total_partial_paid_invoices }}
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+</div>
+
+<!-- Profile creation form.  -->
+<div
+  class="modal fade"
+  id="profileCreateModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="profileCreateModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-xs" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="profileCreateModalLabel">Create new Profile</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" #profileCreationCloseButton>
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <ng-container *ngIf="profiles?.length">
+
+        
+          <div class="row">
+            <div class="col col-xs-12">
+              <div class="form-label" translate>Type of profile</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col col-xs-6">
+              <label class="checkbox">
+                <input type="checkbox" [(ngModel)]="businessProfile" (ngModelChange)="businessProfile ? personalProfile = false : personalProfile = true">
+                <span translate>Business</span>
+              </label>
+            </div>
+            <div class="col col-xs-6">
+              <label class="checkbox">
+                <input type="checkbox" [(ngModel)]="personalProfile" (ngModelChange)="personalProfile ? businessProfile = false : businessProfile = true">
+                <span translate>Personal</span>
+              </label>
+            </div>
+          </div>
+        </ng-container>
+        <div class="row m-t-10">
+          <div class="col col-xs-12">
+            <div class="form-label" translate>Provide name of the profile</div>
+            <input type="text"
+              [(ngModel)]="newProfile.name"
+              placeholder="Name Of the Profile"
+              class="width-p-100" />
+            <small class="text-danger" *ngIf="errors && errors.name && errors.name?.length">
+              {{ errors.name[0] }}
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" (click)="createProfile()">Create Profile</button>
+      </div>
+    </div>
+  </div>
+</div>

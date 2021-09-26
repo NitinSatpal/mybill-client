@@ -1,0 +1,30 @@
+@import "src/theme/theme-variables";
+
+.navbar {
+  margin-bottom: $spacer;
+
+  .fas {
+    font-size: 20px;
+    padding-right: 5px;
+  }
+
+  &-brand {
+    color: white !important;
+  }
+
+  .nav-link.active {
+    font-weight: bold;
+  }
+}
+
+.nav-link.dropdown-toggle {
+  cursor: pointer;
+}
+
+:host ::ng-deep {
+  .dropdown-toggle {
+    &::after {
+      margin-left: 0 !important;
+    }
+  }
+}

@@ -1,0 +1,676 @@
+<div class="container">
+  <div class="row flex m-b-5 align-center">
+    <div class="col" [class.col-cs-25]="invoices?.length || filtersApplied" [class.col-cs-50]="!invoices?.length && !filtersApplied">
+      <app-search (searchTextChanged)="searchInvoices($event)" *ngIf="invoices?.length || (!invoices?.length && filtersApplied)"></app-search>
+
+      <ng-container *ngIf="!invoices?.length && !filtersApplied">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        <span class="warning" translate>You have not added any Invoices yet!</span>
+      </ng-container>
+    </div>
+    <div class="col text-right" [class.col-cs-75]="invoices?.length || filtersApplied" [class.col-cs-50]="!invoices?.length && !filtersApplied">
+      <app-summary-detail (summaryDetailFlagChanged)="showSummary=$event"
+        [page]="pageNames.INVOICES" *ngIf="invoices?.length"></app-summary-detail>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="initializeInvoice()"
+        data-toggle="modal"
+        data-target="#invoiceModal">
+        <span translate>ADD Invoice</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="m-b-30" *ngIf="!sellersLoading && !buyersLoading && !productsLoading && (invoices?.length || (!invoices?.length && filtersApplied))">
+    <app-filter [showSeller]="true"
+      [showBuyer]="true"
+      [showProduct]="true"
+      [sellers]="sellersMinimal"
+      [buyers]="buyersMinimal"
+      [products]="productsMinimal"
+      (filterChanged)="filterInvoices($event)"></app-filter>
+  </div>
+
+  <div *ngIf="invoices?.length === 0 && filtersApplied">
+    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+    <span class="warning" translate>No result found!</span>
+  </div>
+
+  <div class="row flex" [class.no-height-opacity]="!invoices?.length">
+    <ng-container *ngIf="showSummary">
+      <div class="col col-cs-12 form-label" translate>Product</div>
+      <div class="col col-cs-10 form-label" translate>Invoice Date</div>
+      <div class="col col-cs-15 form-label" translate>Seller</div>
+      <div class="col col-cs-15 form-label" translate>Buyer</div>
+      <div class="col col-cs-15 form-label" translate>Seller Commission</div>
+      <div class="col col-cs-15 form-label" translate>Buyer Commission</div>
+      <div class="col col-cs-8 form-label" translate>Status</div>
+    </ng-container>
+    <div class="col p-l-0 status-change-selector" [ngClass]="{'mr-left-auto': !showSummary, 'col-cs-15': !showSummary, 'p-r-0': showSummary, 'col-cs-10': showSummary}"
+      *ngIf="selectedInvoices?.length">
+      <ng-select
+        [items]="paymentStatus"
+        bindLabel="enum_name"
+        bindValue="enum_id"
+        placeholder="Mark As ..."
+        [(ngModel)]="selectedPaymentStatus"
+        (ngModelChange)="onPaymentStatusSelected()"
+        [clearable]="false"
+      >
+      </ng-select>
+    </div>
+  </div>
+
+  <ng-container *ngFor="let invoice of invoices; let i = index;">
+    <div class="row summary-panel" *ngIf="showSummary">
+      <div class="col col-cs-12">
+        <ng-container *ngIf="invoice?.product_name">{{ invoice.product_name }}</ng-container>
+        <ng-container *ngIf="!invoice?.product_name">-</ng-container>
+      </div>
+      <div class="col col-cs-10">{{ invoice.invoice_date | date: 'mediumDate' }}</div>
+      <div class="col col-cs-15">{{ invoice.seller_name }}</div>
+      <div class="col col-cs-15">{{ invoice.buyer_name }}</div>
+      <div class="col col-cs-15">{{ invoice.calculated_seller_commission | number: '1.2-2' }}</div>
+      <div class="col col-cs-15">{{ invoice.calculated_buyer_commission | number: '1.2-2' }}</div>
+      <div class="col col-cs-8">{{ invoice.payment_status }}</div>
+      <div class="col col-cs-5 select-invoice">
+        <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="invoice.selected" (ngModelChange)="onInvoiceSelect(invoice)" name="selector-{{i}}">
+          <span translate></span>
+        </label>
+      </div>
+      <div class="col col-cs-5 text-right p-r-10">
+        <a class="cursor-pointer"
+          [popover]="deleteTemplate"
+          [outsideClick]="true"
+          placement="left"
+          container="table"
+          [popoverContext]="{invoiceId: invoice.id}">
+            <i class="fas fa-trash"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="row panel" *ngIf="!showSummary">
+      <div class="col col-cs-50 bold">
+        <span *ngIf="invoice?.name">{{ invoice.name }}</span>
+      </div>
+      <div class="col col-cs-40 bold">
+        {{ invoice.invoice_date | date: 'mediumDate' }}
+      </div>
+
+      <div class="col col-cs-5 select-invoice">
+        <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="invoice.selected" (ngModelChange)="onInvoiceSelect(invoice)" name="selector-{{i}}">
+          <span translate></span>
+        </label>
+      </div>
+
+      <div class="col col-cs-5 text-right p-r-10">
+        <a class="cursor-pointer"
+          [popover]="deleteTemplate"
+          [outsideClick]="true"
+          placement="left"
+          container="table"
+          [popoverContext]="{invoiceId: invoice.id}">
+            <i class="fas fa-trash"></i>
+        </a>
+      </div>
+
+      <div class="col col-cs-50">
+        <div class="form-label form-label-list" translate>Product</div>
+        <span *ngIf="invoice?.product_name">{{ invoice.product_name }}</span>
+        <span *ngIf="!invoice?.product_name">-</span>
+      </div>
+
+      <div class="col col-cs-50">
+        <div class="form-label form-label-list" translate>Payment Status</div>
+        {{ invoice.payment_status }}
+      </div>
+
+      <div class="col col-cs-50 m-t-10">
+        <div class="form-label form-label-list" translate>Seller</div>
+        {{ invoice.seller_name }}
+      </div>
+
+      <div class="col col-cs-50 m-t-10">
+        <div class="form-label form-label-list" translate>Buyer</div>
+        {{ invoice.buyer_name }}
+      </div>
+
+      <div class="col col-cs-50 m-t-10">
+        <div class="form-label form-label-list" translate>Seller Commission</div>
+        {{ invoice.calculated_seller_commission | number: '1.2-2' }}
+        <br />
+        <small class="info-small" *ngIf="!invoice.only_buyer_commission">
+          ({{ invoice.seller_commission_value }}
+            <ng-container *ngIf="invoice.seller_commission_type === invoiceEnum.FIXED_CAPITALIZE">INR</ng-container>
+            <ng-container *ngIf="invoice.seller_commission_type === invoiceEnum.PERCENT_CAPITALIZE">%</ng-container>
+            {{ invoice.seller_commission_applied_to }}<ng-container *ngIf="invoice.seller_commission_type === invoiceEnum.FIXED_CAPITALIZE">)</ng-container>
+            <ng-container *ngIf="invoice.seller_commission_type === invoiceEnum.PERCENT_CAPITALIZE">
+              at {{ invoice.seller_price_for_commission }} {{ invoice.seller_price_for_commission_applied_to }})
+            </ng-container>
+        </small>
+      </div>
+
+      <div class="col col-cs-50 m-t-10">
+        <div class="form-label form-label-list" translate>Buyer Commission</div>
+        {{ invoice.calculated_buyer_commission | number: '1.2-2' }}
+        <br />
+        <small class="info-small" *ngIf="!invoice.only_seller_commission">
+          ({{ invoice.buyer_commission_value }}
+            <ng-container *ngIf="invoice.buyer_commission_type === invoiceEnum.FIXED_CAPITALIZE">INR</ng-container>
+            <ng-container *ngIf="invoice.buyer_commission_type === invoiceEnum.PERCENT_CAPITALIZE">%</ng-container>
+            {{ invoice.buyer_commission_applied_to }}<ng-container *ngIf="invoice.buyer_commission_type === invoiceEnum.FIXED_CAPITALIZE">)</ng-container>
+            <ng-container *ngIf="invoice.buyer_commission_type === invoiceEnum.PERCENT_CAPITALIZE">
+              at {{ invoice.buyer_price_for_commission }} INR {{ invoice.buyer_price_for_commission_applied_to }})
+            </ng-container>
+        </small>
+      </div>
+
+      <div class="col col-cs-50 m-t-10">
+        <div class="form-label form-label-list" translate>Total Price</div>
+        {{ invoice.total_price | number: '1.2-2' }}
+        <br />
+        <small class="info-small">
+          {{ invoice.number_of_units }} Unit/s ({{ invoice.quantity_per_unit }} {{ invoice.quantity_measurement_unit }} Per Unit)
+        </small>
+      </div>
+
+      <div class="col col-cs-50 m-t-10">
+        <div class="form-label form-label-list" translate>Discount</div>
+        {{ invoice.discount_value | number: '1.2-2' }}
+        <span *ngIf="invoice.discount_type === invoiceEnum.PERCENT"> % </span>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Invoice form Modal -->
+<div
+  class="modal fade"
+  id="invoiceModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="invoiceModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="invoiceModalLabel">
+          <span *ngIf="invoice?.id"></span>
+          <span *ngIf="!invoice?.id" translate>Add new Invoice!</span>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row" *ngIf="invoice">
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Do you want to give the name to the invoice?</div>
+            <input type="text" [(ngModel)]="invoice.name" placeholder="Name" class="width-p-100" />
+          </div>
+
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Invoice Date</div>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="invoice.invoice_date"
+              placeholder="Invoice Date"
+              bsDatepicker
+            />
+          </div>
+
+          <div class="col col-cs-30">
+            <div class="form-label" translate>Product</div>
+            <ng-select
+              [items]="productsMinimal"
+              bindLabel="name"
+              bindValue="id"
+              placeholder="Product"
+              [(ngModel)]="invoice.product"
+            >
+            </ng-select>
+            <small class="text-danger" *ngIf="errors && errors?.product">
+              {{ errors?.product[0] }}
+            </small>
+          </div>
+        </div>
+        <div class="row m-t-20">
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Name of the seller</div>
+            <ng-select
+              [items]="sellersMinimal"
+              [virtualScroll]="true"
+              [loading]="sellersLoading"
+              bindLabel="name"
+              bindValue="id"
+              placeholder="Select Seller"
+              (scroll)="onSellerScroll($event)"
+              (scrollToEnd)="onSellerScrollToEnd()"
+              [(ngModel)]="invoice.seller">
+              <ng-template ng-option-tmp let-item="item" let-index="index">
+                {{ item.name }}
+              </ng-template>
+            </ng-select>
+            <small class="text-danger" *ngIf="errors && errors?.seller">
+              {{ errors?.seller[0] }}
+            </small>
+          </div>
+
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Name of the buyer</div>
+            <ng-select
+              [items]="buyersMinimal"
+              [virtualScroll]="true"
+              [loading]="buyersLoading"
+              bindLabel="name"
+              bindValue="id"
+              placeholder="Select Buyer"
+              [(ngModel)]="invoice.buyer"
+              (scroll)="onBuyerScroll($event)"
+              (scrollToEnd)="onBuyerScrollToEnd()"
+            >
+              <ng-template ng-option-tmp let-item="item" let-index="index">
+                {{ item.name }}
+              </ng-template>
+            </ng-select>
+            <small class="text-danger" *ngIf="errors && errors?.buyer">
+              {{ errors?.buyer[0] }}
+            </small>
+          </div>
+        </div>
+        <div class="row m-t-20">
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Number Of Units</div>
+            <input
+              type="number"
+              [(ngModel)]="invoice.number_of_units"
+              placeholder="Number Of Units"
+              class="width-p-100"
+            />
+            <small class="text-danger" *ngIf="errors && errors?.number_of_units">
+              {{ errors?.number_of_units[0] }}
+            </small>
+          </div>
+
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Quantity Per Unit</div>
+            <input
+              type="number"
+              [(ngModel)]="invoice.quantity_per_unit"
+              placeholder="Quantity Per Unit"
+              class="width-p-100"
+            />
+            <small class="text-danger" *ngIf="errors && errors?.quantity_per_unit">
+              {{ errors?.quantity_per_unit[0] }}
+            </small>
+          </div>
+
+          <div class="col col-cs-30">
+            <div class="form-label" translate>Quantity Measurement</div>
+            <ng-select
+              [items]="quantityMeasurementUnit"
+              bindLabel="enum_name"
+              bindValue="enum_id"
+              placeholder="e.g. Kilogram"
+              [(ngModel)]="invoice.quantity_measurement_unit"
+              [clearable]="false"
+            >
+            </ng-select>
+          </div>
+        </div>
+
+        <ng-container *ngIf="!profileSettings.set_commission_per_invoice">
+          <div class="row m-t-20">
+            <div class="col-cs-100">
+              <span class="primary-colored-text bold" translate>The commission set in the Settings will be used.</span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="profileSettings.set_commission_per_invoice">
+          <div class="row m-t-20">
+            <div class="col col-cs-35 m-t-5">
+              <div class="form-label" translate>Charge Commission To</div>
+              <ng-select
+                [items]="commissionApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="Choose whom you want to charge"
+                [clearable]="false"
+                [(ngModel)]="invoice.charge_applicable_to"
+                (ngModelChange)="onChargeCommissionToChange()"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20">
+            <div class="col col-cs-100" *ngIf="showSeparateCommissionSection">
+              <span translate>Seller Commission</span>
+              <hr />
+            </div>
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission</div>
+              <input
+                type="number"
+                [(ngModel)]="invoice.seller_commission_value"
+                placeholder="Commission"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.seller_commission_value">
+                {{ errors?.seller_commission_value[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="e.g. Per Kilogram"
+                [(ngModel)]="invoice.seller_commission_applied_to"
+              >
+              </ng-select>
+            </div>
+
+            <div class="col col-cs-30">
+              <div class="form-label" translate>Commission type</div>
+              <ng-select
+                [items]="commissionAndDiscountType"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="Commission Type"
+                [(ngModel)]="invoice.seller_commission_type"
+                [clearable]="false"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20" *ngIf="invoice.seller_commission_type == 2">
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission</div>
+              <input
+                type="number"
+                placeholder="Price For Commission"
+                [(ngModel)]="invoice.seller_price_for_commission"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.seller_price_for_commission">
+                {{ errors?.seller_price_for_commission[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="e.g. Per Kilogram"
+                [(ngModel)]="invoice.seller_price_for_commission_applied_to"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20" *ngIf="showSeparateCommissionSection">
+            <div class="col col-cs-100">
+              <span translate>Buyer Commission</span>
+              <hr />
+            </div>
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission</div>
+              <input
+                type="number"
+                [(ngModel)]="invoice.buyer_commission_value"
+                placeholder="Commission"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.buyer_commission_value">
+                {{ errors?.buyer_commission_value[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="e.g. Per Kilogram"
+                [(ngModel)]="invoice.buyer_commission_applied_to"
+              >
+              </ng-select>
+              <small class="text-danger" *ngIf="errors && errors?.buyer_commission_applied_to">
+                {{ errors?.buyer_commission_applied_to[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-30">
+              <div class="form-label" translate>Commission type</div>
+              <ng-select
+                [items]="commissionAndDiscountType"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="Commission Type"
+                [(ngModel)]="invoice.buyer_commission_type"
+                [clearable]="false"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-20" *ngIf="invoice.buyer_commission_type == 2">
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission</div>
+              <input
+                type="number"
+                placeholder="Price For Commission"
+                [(ngModel)]="invoice.buyer_price_for_commission"
+                class="width-p-100"
+              />
+              <small class="text-danger" *ngIf="errors && errors?.buyer_price_for_commission">
+                {{ errors?.buyer_price_for_commission[0] }}
+              </small>
+            </div>
+
+            <div class="col col-cs-35">
+              <div class="form-label" translate>Price For Commission Applicable To</div>
+              <ng-select
+                [items]="priceCommissionAndDiscountApplicability"
+                bindLabel="enum_name"
+                bindValue="enum_id"
+                placeholder="e.g. Per Kilogram"
+                [(ngModel)]="invoice.buyer_price_for_commission_applied_to"
+              >
+              </ng-select>
+            </div>
+          </div>
+
+          <div class="row m-t-10" *ngIf="invoice.charge_applicable_to === invoiceEnum.BOTH_SELLER_AND_BUYER">
+            <div class="col col-cs-100 m-t-5">
+              <span>
+                <span *ngIf="!showSeparateCommissionSection" translate>
+                  Want to add separate commissions for seller and buyer?
+                  <span
+                    class="primary-colored-text bold cursor-pointer"
+                    (click)="toggleSeparateCommissionSection(!showSeparateCommissionSection)"
+                    translate
+                  >
+                    Click Here!
+                  </span>
+                </span>
+                <span *ngIf="showSeparateCommissionSection" translate>
+                  <span
+                    class="primary-colored-text bold cursor-pointer"
+                    (click)="toggleSeparateCommissionSection(!showSeparateCommissionSection)"
+                    translate
+                  >
+                    Go back
+                  </span>
+                  and add the same commission for seller and buyer.
+                </span>
+              </span>
+            </div>
+          </div>
+        </ng-container>
+
+        <div class="row m-t-20">
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Total Price</div>
+            <input
+              type="number"
+              [(ngModel)]="invoice.total_price"
+              placeholder="Total Price"
+              (ngModelChange)="calculateDiscount()"
+              class="width-p-100"
+            />
+            <small class="text-danger" *ngIf="errors && errors?.total_price">
+              {{ errors?.total_price[0] }}
+            </small>
+          </div>
+        </div>
+
+        <div class="row m-t-20" *ngIf="invoice.total_price && invoice.total_price >= 0">
+          <div class="col col-cs-100">
+            <i class="fas fa-plus-square"></i>
+            <span class="cursor-pointer primary-colored-text bold">
+              <span *ngIf="!showDiscountSection" (click)="toggleDiscountSection(!showDiscountSection)" translate
+                >ADD DISCOUNT</span
+              >
+              <span *ngIf="showDiscountSection" (click)="toggleDiscountSection(!showDiscountSection)" translate
+                >REMOVE DISCOUNT</span
+              >
+            </span>
+          </div>
+        </div>
+        <div class="row m-t-20" *ngIf="showDiscountSection">
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Discount</div>
+            <input
+              type="number"
+              [(ngModel)]="invoice.discount_value"
+              placeholder="Discount"
+              (ngModelChange)="calculateDiscount()"
+              class="width-p-100"
+            />
+            <small class="text-danger" *ngIf="errors && errors?.discount_value">
+              {{ errors?.discount_value[0] }}
+            </small>
+          </div>
+
+          <div class="col col-cs-35">
+            <div class="form-label" translate>Discount Type</div>
+            <ng-select
+              [items]="commissionAndDiscountType"
+              bindLabel="enum_name"
+              bindValue="enum_id"
+              placeholder="Discount Type"
+              [(ngModel)]="invoice.discount_type"
+              (ngModelChange)="calculateDiscount()"
+              [clearable]="false"
+            >
+            </ng-select>
+          </div>
+
+          <div class="col col-cs-100 m-t-10 bold" *ngIf="finalPrice !== null && finalPrice >= 0">
+            <span class="uppercase form-label final-price-heading" translate>Final Price: </span>
+            <span class="primary-colored-text font-size-20 p-l-5">{{ finalPrice }}/-</span>
+          </div>
+        </div>
+
+        <div class="row m-t-10">
+          <div class="alert alert-danger" *ngIf="errors && errors?.global">
+            {{ errors?.global[0] }}
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" #invoiceModalCloseButton>Close</button>
+        <button type="button" class="btn btn-primary" (click)="saveInvoice()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Invoice payment modal -->
+<button data-toggle="modal" data-target="#invoicePaymentModal" #invoicePaymentModalButton hidden></button>
+<div
+  class="modal fade"
+  id="invoicePaymentModal"
+  tabindex="-1"
+  role="dialog"
+  data-keyboard="false"
+  data-backdrop="static"
+  aria-labelledby="invoicePaymentModalLabel"
+  (click)="initializePartialPaidInvoices()"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="invoicePaymentModalLabel">
+          <span *ngIf="!invoice?.id" translate>Provide Payment details per Invoice!</span>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row row-flex row-compact">
+          <div class="p-l-5 p-r-5 col col-cs-12 col-compact form-label" translate>Invoice Date</div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-cs-offset-4 col-compact form-label" translate>Remaining Seller Commission</div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-compact form-label" translate>Paid Seller Commission</div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-cs-offset-4 col-compact form-label" translate>Remaining Buyer Commission</div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-compact form-label" translate>Paid Buyer Commission</div>
+        </div>
+        <div class="row row-flex row-compact p-b-10 m-b-10 border-1-bottom-ccc" *ngFor="let invoice of selectedInvoices">
+          <div class="p-l-5 p-r-5 col col-cs-12 col-compact">{{ invoice.invoice_date | date: 'mediumDate' }}</div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-cs-offset-4 col-compact">{{ invoice.remaining_seller_commission_amount | number: '1.2-2' }}</div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-compact">
+            <input
+              type="number"
+              [(ngModel)]="invoice.seller_commission_paid_amount_now"
+              placeholder="Amount"
+              class="width-p-100"
+            />
+          </div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-cs-offset-4 col-compact">{{ invoice.remaining_buyer_commission_amount | number: '1.2-2' }}</div>
+          <div class="p-l-5 p-r-5 col col-cs-20 col-compact">
+            <input
+              type="number"
+              [(ngModel)]="invoice.buyer_commission_paid_amount_now"
+              placeholder="Amount"
+              class="width-p-100"
+            />
+          </div>
+          <div class="col col-cs-100 col-compact p-l-5 p-r-5" *ngIf="errors && errors[0] && errors[0].global">
+            <small class="text-danger">
+              {{ errors[0].global[0] }}
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" (click)="cancelPartialPayment()" #invoicePaymentModalCloseButton>Close</button>
+        <button type="button" class="btn btn-primary" (click)="updatePaymentStatus()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Delete popover -->
+<ng-template #deleteTemplate let-invoiceId="invoiceId">
+  <span class="m-r-5" translate>Are you sure you want to delete this Invoice?
+  </span>
+  <button class="btn btn-xs btn-primary" (click)="deleteInvoice(invoiceId)" translate>YES</button>
+</ng-template>
